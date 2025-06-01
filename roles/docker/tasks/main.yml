@@ -1,0 +1,27 @@
+---
+- name: Install prerequisites for Docker
+  dnf:
+    name:
+      - dnf-plugins-core
+    state: present
+
+- name: Add Docker CE repository
+  command: dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+  args:
+    creates: /etc/yum.repos.d/docker-ce.repo
+
+- name: Install Docker CE
+  dnf:
+    name: docker-ce
+    state: present
+
+- name: Start and enable Docker service
+  systemd:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Install Docker Python library using custom Python interpreter
+  pip:
+    executable: "{{ app_dir }}/python3/bin/pip3"
+    name: docker

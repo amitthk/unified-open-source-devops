@@ -1,0 +1,17 @@
+---
+- name: DevOps Toolchain Installation on Fedora
+  hosts: all
+  become: true
+  vars_files:
+    - vars/main.yml
+  roles:
+      - prerequisites
+      - jdk
+      - python
+      - postgres
+      - gitea
+      - golang
+      - jenkins
+      - nexus
+      - sonarqube
+      - post-install-config

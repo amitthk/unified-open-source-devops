@@ -1,0 +1,9 @@
+---
+- name: Restart SonarQube
+  systemd:
+    name: sonarqube
+    state: restarted
+    enable: true
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
