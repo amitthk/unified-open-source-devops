@@ -1,0 +1,137 @@
+---
+# roles/elasticsearch_kibana/tasks/main.yml
+
+- name: Create download directory
+  file:
+    path: /opt/apps/elasticsearch_kibana
+    state: directory
+    mode: '0755'
+
+- name: Download Elasticsearch tarball
+  get_url:
+    url: https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-{{elasticsearch_version}}-linux-x86_64.tar.gz
+    dest: /opt/apps/elasticsearch_kibana/elasticsearch.tar.gz
+    mode: '0644'
+
+- name: Download Kibana tarball
+  get_url:
+    url: https://artifacts.elastic.co/downloads/kibana/kibana-{{elasticsearch_version}}-linux-x86_64.tar.gz
+    dest: /opt/apps/elasticsearch_kibana/kibana.tar.gz
+    mode: '0644'
+
+- name: Download Logstash tarball
+  get_url:
+    url: https://artifacts.elastic.co/downloads/logstash/logstash-{{elasticsearch_version}}-linux-x86_64.tar.gz
+    dest: /opt/apps/elasticsearch_kibana/logstash.tar.gz
+    mode: '0644'
+
+- name: Extract Elasticsearch
+  unarchive:
+    src: /opt/apps/elasticsearch_kibana/elasticsearch.tar.gz
+    dest: /opt/apps/elasticsearch_kibana/
+    remote_src: yes
+
+- name: Extract Kibana
+  unarchive:
+    src: /opt/apps/elasticsearch_kibana/kibana.tar.gz
+    dest: /opt/apps/elasticsearch_kibana/
+    remote_src: yes
+
+- name: Extract Logstash
+  unarchive:
+    src: /opt/apps/elasticsearch_kibana/logstash.tar.gz
+    dest: /opt/apps/elasticsearch_kibana/
+    remote_src: yes
+
+- name: Add Elasticsearch config
+  copy:
+    dest: /opt/apps/elasticsearch_kibana/elasticsearch-{{elasticsearch_version}}/config/elasticsearch.yml
+    content: |
+      cluster.name: devops-cluster
+      node.name: node-1
+      path.data: /opt/apps/elasticsearch_kibana/elasticsearch-{{elasticsearch_version}}/data
+      path.logs: /opt/apps/elasticsearch_kibana/elasticsearch-{{elasticsearch_version}}/logs
+      network.host: 0.0.0.0
+      http.port: 9200
+
+- name: Add Kibana config
+  copy:
+    dest: /opt/apps/elasticsearch_kibana/kibana-{{elasticsearch_version}}/config/kibana.yml
+    content: |
+      server.port: 5601
+      server.host: "0.0.0.0"
+      elasticsearch.hosts: ["http://localhost:9200"]
+      kibana.index: ".kibana"
+
+- name: Create Elasticsearch systemd service file
+  copy:
+    dest: /etc/systemd/system/elasticsearch.service
+    content: |
+      [Unit]
+      Description=Elasticsearch
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=root
+      ExecStart=/opt/apps/elasticsearch_kibana/elasticsearch-{{elasticsearch_version}}/bin/elasticsearch
+      Restart=on-failure
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Create Kibana systemd service file
+  copy:
+    dest: /etc/systemd/system/kibana.service
+    content: |
+      [Unit]
+      Description=Kibana
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=root
+      ExecStart=/opt/apps/elasticsearch_kibana/kibana-{{elasticsearch_version}}/bin/kibana
+      Restart=on-failure
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Create Logstash systemd service file
+  copy:
+    dest: /etc/systemd/system/logstash.service
+    content: |
+      [Unit]
+      Description=Logstash
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=root
+      ExecStart=/opt/apps/elasticsearch_kibana/logstash-{{elasticsearch_version}}/bin/logstash -f /opt/apps/elasticsearch_kibana/logstash-{{elasticsearch_version}}/config/logstash.conf
+      Restart=on-failure
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: true
+
+- name: Enable and start Elasticsearch
+  systemd:
+    name: elasticsearch
+    enabled: yes
+    state: started
+
+- name: Enable and start Kibana
+  systemd:
+    name: kibana
+    enabled: yes
+    state: started
+
+- name: Enable and start Logstash
+  systemd:
+    name: logstash
+    enabled: yes
+    state: started

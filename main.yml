@@ -15,3 +15,4 @@
       - nexus
       - sonarqube
       - post-install-config
+      - elk
