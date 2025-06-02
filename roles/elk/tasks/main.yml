@@ -7,56 +7,91 @@
     state: directory
     mode: '0755'
 
+- name: Ensure elasticsearch user exists
+  user:
+    name: elasticsearch
+    shell: /bin/bash
+    home: /opt/apps/elasticsearch_kibana
+    create_home: no
+
 - name: Download Elasticsearch tarball
   get_url:
-    url: https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-{{elasticsearch_version}}-linux-x86_64.tar.gz
+    url: https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-{{ elasticsearch_version }}-linux-x86_64.tar.gz
     dest: /opt/apps/elasticsearch_kibana/elasticsearch.tar.gz
     mode: '0644'
+    force: no
 
 - name: Download Kibana tarball
   get_url:
-    url: https://artifacts.elastic.co/downloads/kibana/kibana-{{elasticsearch_version}}-linux-x86_64.tar.gz
+    url: https://artifacts.elastic.co/downloads/kibana/kibana-{{ elasticsearch_version }}-linux-x86_64.tar.gz
     dest: /opt/apps/elasticsearch_kibana/kibana.tar.gz
     mode: '0644'
+    force: no
 
 - name: Download Logstash tarball
   get_url:
-    url: https://artifacts.elastic.co/downloads/logstash/logstash-{{elasticsearch_version}}-linux-x86_64.tar.gz
+    url: https://artifacts.elastic.co/downloads/logstash/logstash-{{ elasticsearch_version }}-linux-x86_64.tar.gz
     dest: /opt/apps/elasticsearch_kibana/logstash.tar.gz
     mode: '0644'
+    force: no
 
 - name: Extract Elasticsearch
   unarchive:
     src: /opt/apps/elasticsearch_kibana/elasticsearch.tar.gz
     dest: /opt/apps/elasticsearch_kibana/
     remote_src: yes
+    creates: /opt/apps/elasticsearch_kibana/elasticsearch-{{ elasticsearch_version }}
 
 - name: Extract Kibana
   unarchive:
     src: /opt/apps/elasticsearch_kibana/kibana.tar.gz
     dest: /opt/apps/elasticsearch_kibana/
     remote_src: yes
+    creates: /opt/apps/elasticsearch_kibana/kibana-{{ elasticsearch_version }}
 
 - name: Extract Logstash
   unarchive:
     src: /opt/apps/elasticsearch_kibana/logstash.tar.gz
     dest: /opt/apps/elasticsearch_kibana/
     remote_src: yes
+    creates: /opt/apps/elasticsearch_kibana/logstash-{{ elasticsearch_version }}
+
+- name: Delete tarballs after extraction
+  file:
+    path: "/opt/apps/elasticsearch_kibana/{{ item }}"
+    state: absent
+  loop:
+    - elasticsearch.tar.gz
+    - kibana.tar.gz
+    - logstash.tar.gz
+
+- name: Set ownership of extracted directories
+  file:
+    path: "/opt/apps/elasticsearch_kibana/{{ item }}-{{ elasticsearch_version }}"
+    owner: elasticsearch
+    group: elasticsearch
+    recurse: yes
+  loop:
+    - elasticsearch
+    - kibana
+    - logstash
 
 - name: Add Elasticsearch config
   copy:
-    dest: /opt/apps/elasticsearch_kibana/elasticsearch-{{elasticsearch_version}}/config/elasticsearch.yml
+    dest: /opt/apps/elasticsearch_kibana/elasticsearch-{{ elasticsearch_version }}/config/elasticsearch.yml
+    owner: elasticsearch
+    group: elasticsearch
     content: |
       cluster.name: devops-cluster
       node.name: node-1
-      path.data: /opt/apps/elasticsearch_kibana/elasticsearch-{{elasticsearch_version}}/data
-      path.logs: /opt/apps/elasticsearch_kibana/elasticsearch-{{elasticsearch_version}}/logs
+      path.data: /opt/apps/elasticsearch_kibana/elasticsearch-{{ elasticsearch_version }}/data
+      path.logs: /opt/apps/elasticsearch_kibana/elasticsearch-{{ elasticsearch_version }}/logs
       network.host: 0.0.0.0
       http.port: 9200
 
 - name: Add Kibana config
   copy:
-    dest: /opt/apps/elasticsearch_kibana/kibana-{{elasticsearch_version}}/config/kibana.yml
+    dest: /opt/apps/elasticsearch_kibana/kibana-{{ elasticsearch_version }}/config/kibana.yml
     content: |
       server.port: 5601
       server.host: "0.0.0.0"
@@ -73,8 +108,8 @@
 
       [Service]
       Type=simple
-      User=root
-      ExecStart=/opt/apps/elasticsearch_kibana/elasticsearch-{{elasticsearch_version}}/bin/elasticsearch
+      User=elasticsearch
+      ExecStart=/opt/apps/elasticsearch_kibana/elasticsearch-{{ elasticsearch_version }}/bin/elasticsearch
       Restart=on-failure
 
       [Install]
@@ -90,8 +125,8 @@
 
       [Service]
       Type=simple
-      User=root
-      ExecStart=/opt/apps/elasticsearch_kibana/kibana-{{elasticsearch_version}}/bin/kibana
+      User=elasticsearch
+      ExecStart=/opt/apps/elasticsearch_kibana/kibana-{{ elasticsearch_version }}/bin/kibana
       Restart=on-failure
 
       [Install]
@@ -107,8 +142,8 @@
 
       [Service]
       Type=simple
-      User=root
-      ExecStart=/opt/apps/elasticsearch_kibana/logstash-{{elasticsearch_version}}/bin/logstash -f /opt/apps/elasticsearch_kibana/logstash-{{elasticsearch_version}}/config/logstash.conf
+      User=elasticsearch
+      ExecStart=/opt/apps/elasticsearch_kibana/logstash-{{ elasticsearch_version }}/bin/logstash -f /opt/apps/elasticsearch_kibana/logstash-{{ elasticsearch_version }}/config/logstash.conf
       Restart=on-failure
 
       [Install]
