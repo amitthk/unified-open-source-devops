@@ -13,13 +13,13 @@
     dest: "/tmp"
     remote_src: yes
   args:
-    creates: "/tmp/amazon-corretto-{{ item.jdk_version }}-linux-x64"
+    creates: "/tmp/amazon-corretto-{{ item.jdk_version }}-linux-{{architecture_alias}}"
 
 - name: Move extracted Corretto JDK {{ item.jdk_version_short }} files to final directory
   shell: |
     mkdir -p {{ app_dir }}/openjdk{{ item.jdk_version_short }}
-    chmod -R 0755 /tmp/amazon-corretto-{{ item.jdk_version }}-linux-x64
-    mv /tmp/amazon-corretto-{{ item.jdk_version }}-linux-x64/* {{ app_dir }}/openjdk{{ item.jdk_version_short }}/
+    chmod -R 0755 /tmp/amazon-corretto-{{ item.jdk_version }}-linux-{{architecture_alias}}
+    mv /tmp/amazon-corretto-{{ item.jdk_version }}-linux-{{architecture_alias}}/* {{ app_dir }}/openjdk{{ item.jdk_version_short }}/
   args:
     creates: "{{ app_dir }}/openjdk{{ item.jdk_version_short }}/bin/java"
 
