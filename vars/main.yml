@@ -11,8 +11,8 @@ database_users:
   - { name: "sonarqube", db: "sonarqube", password: "secretsqdppass#1", schema: "sonarqube_schema" }
   - { name: "gitea", db: "gitea", password: "secretgiteadppass#1", schema: "gitea_schema" }
 jdk_versions:
-  - { jdk_version_short: "17", jdk_version: "17.0.11.9.1", java_url: "https://corretto.aws/downloads/resources/17.0.11.9.1/amazon-corretto-17.0.11.9.1-linux-x64.tar.gz" }
-  - { jdk_version_short: "21", jdk_version: "21.0.3.9.1", java_url: "https://corretto.aws/downloads/resources/21.0.3.9.1/amazon-corretto-21.0.3.9.1-linux-x64.tar.gz" }
+  - { jdk_version_short: "17", jdk_version: "17.0.11.9.1", java_url: "https://corretto.aws/downloads/resources/17.0.11.9.1/amazon-corretto-17.0.11.9.1-linux-{{architecture_alias}}.tar.gz" }
+  - { jdk_version_short: "21", jdk_version: "21.0.3.9.1", java_url: "https://corretto.aws/downloads/resources/21.0.3.9.1/amazon-corretto-21.0.3.9.1-linux-{{architecture_alias}}.tar.gz" }
 
 # SonarQube settings
 sonarqube_version: "9.6.1.59531"
